@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ride-config
+  namespace: ride-hailing
+data:
+  NODE_ENV: "production"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_DATABASE: "ride_hailing"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  JWT_ACCESS_EXPIRY: "15m"
+  JWT_REFRESH_EXPIRY: "30d"
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  USER_SERVICE_URL: "http://user-service:3002"
+  RIDE_SERVICE_URL: "http://ride-service:3003"
+  DRIVER_SERVICE_URL: "http://driver-service:3004"
+  PAYMENT_SERVICE_URL: "http://payment-service:3005"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:3006"
+  LOCATION_SERVICE_URL: "http://location-service:3007"
+  ADMIN_SERVICE_URL: "http://admin-service:3008"
+  CORS_ORIGINS: "*"
+  THROTTLE_TTL: "60"
+  THROTTLE_LIMIT: "100"

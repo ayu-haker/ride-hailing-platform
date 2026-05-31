@@ -1,0 +1,49 @@
+ARG SERVICE_NAME
+
+FROM node:20-alpine AS builder
+ARG SERVICE_NAME
+
+WORKDIR /app
+
+RUN apk add --no-cache python3 make g++
+
+# Build shared library
+COPY backend/shared ./shared/
+WORKDIR /app/shared
+RUN npm install && npx tsc
+
+# Install service dependencies (remove @ride/shared first to avoid registry lookup)
+WORKDIR /app/service
+COPY backend/services/${SERVICE_NAME}/package.json backend/services/${SERVICE_NAME}/tsconfig.json backend/services/${SERVICE_NAME}/tsconfig.build.json ./
+RUN sed -i '/@ride\/shared/d' package.json && \
+    npm install
+
+# Copy shared library into node_modules preserving dist/ path
+RUN mkdir -p node_modules/@ride/shared/dist && \
+    cp -r /app/shared/dist/* node_modules/@ride/shared/dist/ && \
+    cp /app/shared/package.json node_modules/@ride/shared/package.json
+
+# Copy service source and build
+COPY backend/services/${SERVICE_NAME}/ ./
+RUN npm run build
+
+FROM node:20-alpine
+ARG SERVICE_NAME
+
+WORKDIR /app
+
+RUN apk add --no-cache curl tini
+
+# Copy shared lib first so its node_modules (class-validator etc) are available
+COPY --from=builder /app/service/node_modules ./node_modules
+COPY --from=builder /app/service/dist ./dist
+COPY --from=builder /app/service/package.json ./
+
+EXPOSE 3000
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/main.js"]
+
+LABEL service="${SERVICE_NAME}" \
+      version="1.0.0" \
+      description="Ride-hailing microservice"

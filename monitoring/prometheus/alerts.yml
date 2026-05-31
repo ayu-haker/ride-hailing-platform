@@ -1,0 +1,76 @@
+groups:
+  - name: ride-hailing-alerts
+    interval: 30s
+
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+
+      - alert: ServiceDown
+        expr: up{job=~".*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been unreachable for more than 1 minute"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value }}s on {{ $labels.service }}"
+
+      - alert: LowDiskSpace
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining"
+
+      - alert: HighMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is at {{ $value }}%"
+
+      - alert: HighCPUUsage
+        expr: rate(node_cpu_seconds_total{mode="idle"}[5m]) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80%"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_database_numbackends > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections on {{ $labels.datname }}"
+          description: "{{ $labels.datname }} has {{ $value }} active connections"
+
+      - alert: RedisMemoryFull
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value | humanizePercentage }} of max memory"

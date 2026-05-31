@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ride-hailing
+  labels:
+    app: ride-hailing
+    environment: production

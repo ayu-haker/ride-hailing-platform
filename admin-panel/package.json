@@ -1,0 +1,44 @@
+{
+  "name": "admin-panel",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "@tanstack/react-query": "^5.24.0",
+    "axios": "^1.6.7",
+    "zustand": "^4.5.0",
+    "@mui/material": "^5.15.10",
+    "@mui/icons-material": "^5.15.10",
+    "@mui/x-data-grid": "^7.0.0-beta.0",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "recharts": "^2.12.0",
+    "react-hook-form": "^7.50.0",
+    "zod": "^3.22.4",
+    "@hookform/resolvers": "^3.3.4",
+    "date-fns": "^3.3.1",
+    "react-hot-toast": "^2.4.1",
+    "dayjs": "^1.11.10",
+    "file-saver": "^2.0.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0"
+  }
+}

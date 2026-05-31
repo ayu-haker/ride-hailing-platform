@@ -1,0 +1,253 @@
+services:
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gateway
+    container_name: ride-api-gateway
+    ports:
+      - "3000:3000"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: auth-service
+    container_name: ride-auth-service
+    ports:
+      - "3001:3001"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - AUTH_SERVICE_PORT=3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: user-service
+    container_name: ride-user-service
+    ports:
+      - "3002:3002"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - USER_SERVICE_PORT=3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  ride-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: ride-service
+    container_name: ride-ride-service
+    ports:
+      - "3003:3003"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - RIDE_SERVICE_PORT=3003
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  driver-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: driver-service
+    container_name: ride-driver-service
+    ports:
+      - "3004:3004"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - DRIVER_SERVICE_PORT=3004
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: payment-service
+    container_name: ride-payment-service
+    ports:
+      - "3005:3005"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - PAYMENT_SERVICE_PORT=3005
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: notification-service
+    container_name: ride-notification-service
+    ports:
+      - "3006:3006"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - NOTIFICATION_SERVICE_PORT=3006
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  location-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: location-service
+    container_name: ride-location-service
+    ports:
+      - "3007:3007"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - LOCATION_SERVICE_PORT=3007
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  admin-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_NAME: admin-service
+    container_name: ride-admin-service
+    ports:
+      - "3008:3008"
+    env_file: ../.env
+    environment:
+      - NODE_ENV=production
+      - ADMIN_SERVICE_PORT=3008
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: ride-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=ride_hailing
+      - POSTGRES_USER=ride_user
+      - POSTGRES_PASSWORD=ride_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
+    networks:
+      - ride-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ride_user -d ride_hailing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ride-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ride-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: ride-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ../admin-panel/dist:/usr/share/nginx/html/admin
+    depends_on:
+      - api-gateway
+    networks:
+      - ride-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  ride-network:
+    driver: bridge

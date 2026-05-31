@@ -1,0 +1,21 @@
+{
+  "name": "ride-hailing-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-ready ride-hailing platform (Rapido/Uber clone)",
+  "scripts": {
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "k8s:apply": "kubectl apply -f kubernetes/base/",
+    "k8s:delete": "kubectl delete -f kubernetes/base/",
+    "db:migrate": "cd database && npm run migrate",
+    "db:seed": "cd database && npm run seed",
+    "test:all": "cd backend && npm test"
+  },
+  "workspaces": [
+    "backend/services/*",
+    "backend/api-gateway",
+    "backend/shared"
+  ]
+}
